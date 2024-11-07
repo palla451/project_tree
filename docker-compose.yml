@@ -1,0 +1,37 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx-app
+    ports:
+      - "80:80"
+      - "3000:80"
+      - "3000:3000"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/fastcgi.conf:/etc/nginx/fastcgi.conf
+    depends_on:
+      - backend
+      - frontend
+
+  backend:
+    build:
+      context: ./www
+      dockerfile: ../Dockerfile.backend
+    container_name: backend-app
+    volumes:
+      - ./www/backend:/var/www/backend
+    ports:
+      - "9000"
+
+  frontend:
+    container_name: frontend-app
+    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    volumes:
+      - ./www/frontend:/usr/share/nginx/html # Monta solo nel container frontend
+    expose:
+     - "80:3000"
+
+
