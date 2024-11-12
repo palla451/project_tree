@@ -1,2 +1,0 @@
-folder frontend
-folder backend
