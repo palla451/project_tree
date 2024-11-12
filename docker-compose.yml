@@ -2,36 +2,65 @@ services:
   nginx:
     image: nginx:latest
     container_name: nginx-app
+    restart: on-failure
     ports:
       - "80:80"
-      - "3000:80"
-      - "3000:3000"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./nginx/fastcgi.conf:/etc/nginx/fastcgi.conf
+      - ./logs:/var/log/nginx/
     depends_on:
       - backend
       - frontend
+    networks:
+      - network-app
 
   backend:
     build:
       context: ./www
       dockerfile: ../Dockerfile.backend
     container_name: backend-app
+    restart: on-failure
     volumes:
       - ./www/backend:/var/www/backend
     ports:
       - "9000"
+    networks:
+      - network-app
 
   frontend:
-    container_name: frontend-app
-    image: nginx:alpine
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: ./www
+      dockerfile: ../Dockerfile.frontend
+    container_name: frontend-app
+    restart: on-failure
     volumes:
-      - ./www/frontend:/usr/share/nginx/html # Monta solo nel container frontend
-    expose:
-     - "80:3000"
+      - ./www/frontend/dist:/usr/share/nginx/html
+    ports:
+      - "8080:80"
+    networks:
+      - network-app
+
+  database:
+    container_name: db-app
+    restart: on-failure
+    image: mysql:latest
+    platform: linux/x86_64
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: 'backend'           # Nome del database che vuoi creare
+      MYSQL_ROOT_PASSWORD: 'root'         # Password per l'utente root di MySQL
+      MYSQL_USER: 'user'                  # Nome dell'utente non-root che vuoi creare
+      MYSQL_PASSWORD: 'password'
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - network-app
+
+networks:
+  network-app:
+    driver: bridge
+
 
 
