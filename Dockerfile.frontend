@@ -1,2 +1,17 @@
+# Fase 1: Costruzione del frontend con Node.js
+FROM node:18 AS build
+WORKDIR /app
+
+# Copia i file package.json e package-lock.json e installa le dipendenze
+COPY frontend/package*.json ./
+RUN npm install
+
+# Copia tutto il codice sorgente del frontend e genera la build di produzione
+COPY frontend/ .
+RUN npm run build
+RUN ls -la /app/dist  # Verifica il contenuto della directory dist per debug
+
+# Fase 2: Server dei file statici con Nginx
 FROM nginx:alpine
-RUN apk update && apk add bash
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
